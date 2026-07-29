@@ -1,0 +1,10 @@
+# Model files (too large for GitHub, regenerate locally)
+models/*.pkl
+
+# Dataset (also usually too large)
+data/*.csv
+
+# Virtual environment
+.venv/
+__pycache__/
+*.pyc
