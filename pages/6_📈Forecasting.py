@@ -1,0 +1,92 @@
+import streamlit as st
+import pandas as pd
+import plotly.graph_objects as go
+from prophet import Prophet
+
+st.set_page_config(page_title="Forecasting", page_icon="📈", layout="wide")
+st.title("📈 Attack Trend Forecasting")
+st.write("Forecast future incident trends using historical data (Prophet time-series model).")
+
+# ---------------------------------------------------------
+# Load data
+# ---------------------------------------------------------
+@st.cache_data
+def load_data():
+    df = pd.read_csv("data/globalterrorism.csv", encoding="latin-1", low_memory=False)
+    return df
+
+df = load_data()
+
+# ---------------------------------------------------------
+# Filters
+# ---------------------------------------------------------
+col1, col2 = st.columns(2)
+with col1:
+    countries = ["All"] + sorted(df["country_txt"].dropna().unique().tolist())
+    selected_country = st.selectbox("🌍 Filter by Country", countries)
+
+with col2:
+    periods = st.slider("Forecast horizon (years)", min_value=1, max_value=10, value=5)
+
+if selected_country != "All":
+    filtered = df[df["country_txt"] == selected_country]
+else:
+    filtered = df
+
+# ---------------------------------------------------------
+# Prepare yearly time series
+# ---------------------------------------------------------
+yearly_counts = (
+    filtered.groupby("iyear")
+    .size()
+    .reset_index(name="attacks")
+    .rename(columns={"iyear": "ds", "attacks": "y"})
+)
+yearly_counts["ds"] = pd.to_datetime(yearly_counts["ds"], format="%Y")
+
+if len(yearly_counts) < 3:
+    st.warning("Not enough historical data points for this filter to build a reliable forecast.")
+else:
+    with st.spinner("Training forecasting model..."):
+        model = Prophet(yearly_seasonality=False, weekly_seasonality=False, daily_seasonality=False)
+        model.fit(yearly_counts)
+
+        future = model.make_future_dataframe(periods=periods, freq="YE")
+        forecast = model.predict(future)
+
+    # -----------------------------------------------------
+    # Plot with Plotly
+    # -----------------------------------------------------
+    fig = go.Figure()
+
+    fig.add_trace(go.Scatter(
+        x=yearly_counts["ds"], y=yearly_counts["y"],
+        mode="markers+lines", name="Historical Attacks", line=dict(color="#3498db")
+    ))
+
+    fig.add_trace(go.Scatter(
+        x=forecast["ds"], y=forecast["yhat"],
+        mode="lines", name="Forecast", line=dict(color="#e74c3c", dash="dash")
+    ))
+
+    fig.add_trace(go.Scatter(
+        x=pd.concat([forecast["ds"], forecast["ds"][::-1]]),
+        y=pd.concat([forecast["yhat_upper"], forecast["yhat_lower"][::-1]]),
+        fill="toself", fillcolor="rgba(231,76,60,0.15)",
+        line=dict(color="rgba(255,255,255,0)"),
+        name="Confidence Interval", showlegend=True
+    ))
+
+    fig.update_layout(
+        title=f"Attack Frequency Forecast — {selected_country}",
+        xaxis_title="Year", yaxis_title="Number of Attacks",
+        hovermode="x unified"
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
+
+    st.subheader("Forecast Data")
+    display_cols = forecast[["ds", "yhat", "yhat_lower", "yhat_upper"]].tail(periods)
+    display_cols.columns = ["Year", "Predicted Attacks", "Lower Bound", "Upper Bound"]
+    display_cols["Year"] = display_cols["Year"].dt.year
+    st.dataframe(display_cols.round(1), use_container_width=True)
