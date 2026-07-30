@@ -4,160 +4,62 @@ from utils.data_loader import load_data
 
 st.title("🌍 Country Analysis")
 
-# Load dataset
 df = load_data()
 
-# -----------------------------
-# Country Selection
-# -----------------------------
 countries = sorted(df["country_txt"].dropna().unique())
-
-selected_country = st.selectbox(
-    "Select Country",
-    countries
-)
+selected_country = st.selectbox("Select Country", countries)
 
 country_df = df[df["country_txt"] == selected_country]
 
-# -----------------------------
-# Summary Metrics
-# -----------------------------
 st.subheader(f"📊 {selected_country} Summary")
 
 c1, c2, c3, c4 = st.columns(4)
-
 c1.metric("Incidents", len(country_df))
-c2.metric("Fatalities", int(country_df["nkill"].fillna(0).sum()))
-c3.metric("Injured", int(country_df["nwound"].fillna(0).sum()))
+c2.metric("Fatalities", int(country_df["nkill"].sum()))
+c3.metric("Injured", int(country_df["nwound"].sum()))
 c4.metric("Cities", country_df["city"].nunique())
 
 st.divider()
 
-# -----------------------------
-# Attacks Over Years
-# -----------------------------
 st.subheader("📈 Attacks Over Years")
 
-year_df = (
-    country_df.groupby("iyear")
-    .size()
-    .reset_index(name="Attacks")
-)
+year_df = country_df.groupby("iyear").size().reset_index(name="Attacks")
 
 fig = px.line(
-    year_df,
-    x="iyear",
-    y="Attacks",
-    markers=True,
+    year_df, x="iyear", y="Attacks", markers=True,
     title=f"Attacks in {selected_country}"
 )
-
 fig.update_layout(xaxis_title="Year", yaxis_title="Number of Attacks")
-
 st.plotly_chart(fig, use_container_width=True)
 
-# -----------------------------
-# Attack Type Distribution
-# -----------------------------
-st.subheader("🎯 Attack Types")
+st.divider()
 
-attack_df = (
-    country_df["attacktype1_txt"]
-    .value_counts()
-    .reset_index()
-)
+st.subheader("🎯 Attack Type Distribution")
 
-attack_df.columns = ["Attack Type", "Count"]
+attack_dist = country_df["attacktype1_txt"].value_counts().reset_index()
+attack_dist.columns = ["Attack Type", "Count"]
 
-fig2 = px.bar(
-    attack_df,
-    x="Attack Type",
-    y="Count",
-    color="Count",
-    title="Attack Type Distribution"
-)
-
+fig2 = px.pie(attack_dist, names="Attack Type", values="Count", hole=0.4)
 st.plotly_chart(fig2, use_container_width=True)
 
-# -----------------------------
-# Top Terrorist Groups
-# -----------------------------
-st.subheader("👥 Top Terrorist Groups")
+st.divider()
 
-group_df = (
-    country_df["gname"]
-    .value_counts()
-    .head(10)
-    .reset_index()
-)
+st.subheader("🔫 Weapon Type Breakdown")
 
-group_df.columns = ["Group", "Incidents"]
+weapon_dist = country_df["weaptype1_txt"].value_counts().head(10).reset_index()
+weapon_dist.columns = ["Weapon", "Count"]
 
 fig3 = px.bar(
-    group_df,
-    x="Incidents",
-    y="Group",
-    orientation="h",
-    color="Incidents",
-    title="Top 10 Terrorist Groups"
+    weapon_dist, x="Count", y="Weapon", orientation="h",
+    title="Top Weapons Used", color="Count", color_continuous_scale="Reds"
 )
-
 fig3.update_layout(yaxis={"categoryorder": "total ascending"})
-
 st.plotly_chart(fig3, use_container_width=True)
 
-# -----------------------------
-# Fatalities Over Years
-# -----------------------------
-st.subheader("💥 Fatalities Over Years")
+st.divider()
 
-fatal_df = (
-    country_df.groupby("iyear")["nkill"]
-    .sum()
-    .fillna(0)
-    .reset_index()
-)
+st.subheader("👥 Groups Active in this Country")
 
-fig4 = px.line(
-    fatal_df,
-    x="iyear",
-    y="nkill",
-    markers=True,
-    title="Fatalities by Year"
-)
-
-fig4.update_layout(
-    xaxis_title="Year",
-    yaxis_title="Fatalities"
-)
-
-st.plotly_chart(fig4, use_container_width=True)
-
-# -----------------------------
-# Top Affected Cities
-# -----------------------------
-st.subheader("🏙️ Top Affected Cities")
-
-city_df = (
-    country_df[
-        country_df["city"].notna() &
-        (country_df["city"] != "Unknown")
-    ]["city"]
-    .value_counts()
-    .head(10)
-    .reset_index()
-)
-
-city_df.columns = ["City", "Incidents"]
-
-fig5 = px.bar(
-    city_df,
-    x="City",
-    y="Incidents",
-    color="Incidents",
-    title="Top 10 Affected Cities"
-)
-
-st.plotly_chart(fig5, use_container_width=True)
-
-st.success(f"Analysis completed for {selected_country}.")
+group_dist = country_df["gname"].value_counts().head(10).reset_index()
+group_dist.columns = ["Group", "Attacks"]
+st.dataframe(group_dist, use_container_width=True)
