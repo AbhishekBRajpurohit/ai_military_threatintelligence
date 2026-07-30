@@ -27,6 +27,7 @@ Available Modules
 - 📈 Forecasting
 - 🧠 AI Intelligence Report
 - 📊 Data Explorer
+- 🕵️ Group Profile
 - ⚙️ Settings
 
 👉 Use the **left sidebar** to navigate.
