@@ -6,34 +6,22 @@ from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 from reportlab.lib.units import cm
 from docx import Document
+from utils.data_loader import load_data
 
 st.set_page_config(page_title="AI Intelligence Report", page_icon="🧠", layout="wide")
 st.title("🧠 AI Intelligence Report")
 st.write("Auto-generated summary analysis of global terrorism trends from the dataset.")
 
-# ---------------------------------------------------------
-# Load data
-# ---------------------------------------------------------
-@st.cache_data
-def load_data():
-    return pd.read_csv("data/globalterrorism.csv", encoding="latin-1", low_memory=False)
-
 df = load_data()
 
-# ---------------------------------------------------------
-# Compute summary stats
-# ---------------------------------------------------------
 total_attacks = len(df)
-total_deaths = int(df["nkill"].fillna(0).sum())
-total_injured = int(df["nwound"].fillna(0).sum())
+total_deaths = int(df["nkill"].sum())
+total_injured = int(df["nwound"].sum())
 top_country = df["country_txt"].value_counts().idxmax()
 top_group = df["gname"].value_counts().idxmax()
 top_attack_type = df["attacktype1_txt"].value_counts().idxmax()
 year_range = f"{int(df['iyear'].min())} - {int(df['iyear'].max())}"
 
-# ---------------------------------------------------------
-# Display summary cards
-# ---------------------------------------------------------
 c1, c2, c3, c4 = st.columns(4)
 c1.metric("Total Incidents", f"{total_attacks:,}")
 c2.metric("Total Fatalities", f"{total_deaths:,}")
@@ -42,9 +30,6 @@ c4.metric("Years Covered", year_range)
 
 st.markdown("---")
 
-# ---------------------------------------------------------
-# Key insights text
-# ---------------------------------------------------------
 st.subheader("Key Insights")
 st.markdown(f"""
 - **Most affected country:** {top_country}
@@ -53,9 +38,6 @@ st.markdown(f"""
 - Dataset spans **{year_range}**, covering **{total_attacks:,} recorded incidents**.
 """)
 
-# ---------------------------------------------------------
-# Charts
-# ---------------------------------------------------------
 col1, col2 = st.columns(2)
 
 with col1:
@@ -80,16 +62,14 @@ st.plotly_chart(fig3, use_container_width=True)
 
 st.markdown("---")
 
-# ---------------------------------------------------------
-# Export functions
-# ---------------------------------------------------------
+
 def generate_pdf():
     buffer = BytesIO()
     c = canvas.Canvas(buffer, pagesize=A4)
     width, height = A4
 
     c.setFont("Helvetica-Bold", 16)
-    c.drawString(2*cm, height - 2*cm, "AI Military Intelligence Report")
+    c.drawString(2 * cm, height - 2 * cm, "AI Military Intelligence Report")
 
     c.setFont("Helvetica", 11)
     lines = [
@@ -103,14 +83,15 @@ def generate_pdf():
         f"Most Common Attack Type: {top_attack_type}",
     ]
 
-    y = height - 3*cm
+    y = height - 3 * cm
     for line in lines:
-        c.drawString(2*cm, y, line)
-        y -= 0.8*cm
+        c.drawString(2 * cm, y, line)
+        y -= 0.8 * cm
 
     c.save()
     buffer.seek(0)
     return buffer
+
 
 def generate_docx():
     doc = Document()
@@ -130,6 +111,7 @@ def generate_docx():
     doc.save(buffer)
     buffer.seek(0)
     return buffer
+
 
 col1, col2 = st.columns(2)
 with col1:

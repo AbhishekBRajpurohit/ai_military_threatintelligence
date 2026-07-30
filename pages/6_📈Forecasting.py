@@ -2,24 +2,14 @@ import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
 from prophet import Prophet
+from utils.data_loader import load_data
 
 st.set_page_config(page_title="Forecasting", page_icon="📈", layout="wide")
 st.title("📈 Attack Trend Forecasting")
 st.write("Forecast future incident trends using historical data (Prophet time-series model).")
 
-# ---------------------------------------------------------
-# Load data
-# ---------------------------------------------------------
-@st.cache_data
-def load_data():
-    df = pd.read_csv("data/globalterrorism.csv", encoding="latin-1", low_memory=False)
-    return df
-
 df = load_data()
 
-# ---------------------------------------------------------
-# Filters
-# ---------------------------------------------------------
 col1, col2 = st.columns(2)
 with col1:
     countries = ["All"] + sorted(df["country_txt"].dropna().unique().tolist())
@@ -33,20 +23,24 @@ if selected_country != "All":
 else:
     filtered = df
 
-# ---------------------------------------------------------
-# Prepare yearly time series
-# ---------------------------------------------------------
 yearly_counts = (
     filtered.groupby("iyear")
     .size()
     .reset_index(name="attacks")
     .rename(columns={"iyear": "ds", "attacks": "y"})
 )
-yearly_counts["ds"] = pd.to_datetime(yearly_counts["ds"], format="%Y")
 
-if len(yearly_counts) < 3:
-    st.warning("Not enough historical data points for this filter to build a reliable forecast.")
+MIN_POINTS = 8
+
+if len(yearly_counts) < MIN_POINTS:
+    st.warning(
+        f"Only {len(yearly_counts)} yearly data points for this filter. "
+        f"Forecasts need at least {MIN_POINTS} points to be reasonably stable — "
+        "try 'All' countries or a broader time range."
+    )
 else:
+    yearly_counts["ds"] = pd.to_datetime(yearly_counts["ds"], format="%Y")
+
     with st.spinner("Training forecasting model..."):
         model = Prophet(yearly_seasonality=False, weekly_seasonality=False, daily_seasonality=False)
         model.fit(yearly_counts)
@@ -54,9 +48,6 @@ else:
         future = model.make_future_dataframe(periods=periods, freq="YE")
         forecast = model.predict(future)
 
-    # -----------------------------------------------------
-    # Plot with Plotly
-    # -----------------------------------------------------
     fig = go.Figure()
 
     fig.add_trace(go.Scatter(
