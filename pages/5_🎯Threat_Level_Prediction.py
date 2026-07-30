@@ -1,14 +1,13 @@
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
+import joblib
+from config import SEVERITY_MODEL_PATH, SEVERITY_ENCODERS_PATH
 
 st.set_page_config(page_title="Threat Level Prediction", page_icon="🎯", layout="wide")
 st.title("🎯 Threat Level Prediction")
 st.write("Estimate the overall threat level of an incident based on its characteristics.")
 
-# ---------------------------------------------------------
-# Input form
-# ---------------------------------------------------------
 col1, col2 = st.columns(2)
 
 with col1:
@@ -32,9 +31,6 @@ with col2:
 
 predict_btn = st.button("🚨 Assess Threat Level")
 
-# ---------------------------------------------------------
-# Rule-based scoring engine
-# ---------------------------------------------------------
 WEAPON_WEIGHTS = {
     "Chemical": 25, "Biological": 25, "Explosives": 20, "Incendiary": 15,
     "Firearms": 12, "Sabotage Equipment": 10, "Melee": 6, "Unknown": 5, "Other": 8
@@ -45,15 +41,17 @@ HIGH_VALUE_TARGETS = {
     "Religious Figures/Institutions", "Transportation"
 }
 
+
 def compute_threat_score(nkill, nwound, suicide, success, weapon_type, target_type):
     score = 0
-    score += min(nkill * 4, 40)          # casualties weigh heavily, capped
+    score += min(nkill * 4, 40)
     score += min(nwound * 1.5, 20)
     score += WEAPON_WEIGHTS.get(weapon_type, 5)
     score += 15 if suicide == "Yes" else 0
     score += 10 if success == "Yes" else 0
     score += 10 if target_type in HIGH_VALUE_TARGETS else 3
     return min(round(score), 100)
+
 
 def score_to_level(score):
     if score < 25:
@@ -65,14 +63,22 @@ def score_to_level(score):
     else:
         return "Critical", "#e74c3c"
 
-# ---------------------------------------------------------
-# Output
-# ---------------------------------------------------------
+
+@st.cache_resource
+def load_severity_model():
+    model = joblib.load(SEVERITY_MODEL_PATH)
+    encoders = joblib.load(SEVERITY_ENCODERS_PATH)
+    return model, encoders
+
+
 if predict_btn:
     score = compute_threat_score(nkill, nwound, suicide, success, weapon_type, target_type)
     level, color = score_to_level(score)
 
-    st.markdown(f"### Predicted Threat Level: **:{'green' if level=='Low' else 'orange' if level in ['Moderate','High'] else 'red'}[{level}]**")
+    st.markdown(
+        f"### Predicted Threat Level: "
+        f"**:{'green' if level == 'Low' else 'orange' if level in ['Moderate', 'High'] else 'red'}[{level}]**"
+    )
 
     fig = go.Figure(go.Indicator(
         mode="gauge+number",
@@ -96,3 +102,31 @@ if predict_btn:
         "weapon severity, target sensitivity, and attack characteristics. "
         "It is intended for educational/analytical demonstration, not operational use."
     )
+
+    st.divider()
+    st.subheader("🤖 ML-Based Casualty Estimate")
+
+    try:
+        sev_model, sev_encoders = load_severity_model()
+
+        input_row = pd.DataFrame({
+            "country_txt": [0],
+            "region_txt": [0],
+            "attacktype1_txt": [0],
+            "weaptype1_txt": [sev_encoders["weaptype1_txt"].transform([weapon_type])[0]
+                              if weapon_type in sev_encoders["weaptype1_txt"].classes_ else 0],
+            "targtype1_txt": [sev_encoders["targtype1_txt"].transform([target_type])[0]
+                              if target_type in sev_encoders["targtype1_txt"].classes_ else 0],
+            "suicide": [1 if suicide == "Yes" else 0],
+            "success": [1 if success == "Yes" else 0],
+        })
+
+        ml_estimate = sev_model.predict(input_row)[0]
+        st.metric("ML-Estimated Casualties (nkill + nwound)", f"{ml_estimate:.1f}")
+        st.caption(
+            "Predicted from historical patterns using a RandomForest regressor. "
+            "Country/region are not set from this form, so treat this as a rough baseline."
+        )
+
+    except FileNotFoundError:
+        st.caption("Run `train_severity_model.py` to enable ML-based casualty estimation here.")

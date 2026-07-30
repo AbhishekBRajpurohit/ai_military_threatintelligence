@@ -2,23 +2,20 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import joblib
+from config import ATTACK_MODEL_PATH, FEATURE_ENCODERS_PATH, TARGET_ENCODER_PATH
 
-# ---------------------------------------------------------
-# Page config
-# ---------------------------------------------------------
 st.set_page_config(page_title="Attack Prediction", page_icon="🤖", layout="wide")
 st.title("🤖 Attack Type Prediction")
 st.write("Enter the incident details below and click **Predict Attack Type**.")
 
-# ---------------------------------------------------------
-# Load model + encoders (cached so it only loads once)
-# ---------------------------------------------------------
+
 @st.cache_resource
 def load_model_and_encoders():
-    model = joblib.load("models/attack_prediction_model.pkl")
-    encoders = joblib.load("models/feature_encoders.pkl")
-    target_encoder = joblib.load("models/target_encoder.pkl")
+    model = joblib.load(ATTACK_MODEL_PATH)
+    encoders = joblib.load(FEATURE_ENCODERS_PATH)
+    target_encoder = joblib.load(TARGET_ENCODER_PATH)
     return model, encoders, target_encoder
+
 
 try:
     model, encoders, target_encoder = load_model_and_encoders()
@@ -30,9 +27,6 @@ except FileNotFoundError:
         "to generate the model and encoder files inside the /models folder."
     )
 
-# ---------------------------------------------------------
-# Input form (matches your screenshot layout)
-# ---------------------------------------------------------
 if model_loaded:
     col1, col2 = st.columns(2)
 
@@ -51,9 +45,6 @@ if model_loaded:
 
     predict_btn = st.button("🚀 Predict Attack Type")
 
-    # -------------------------------------------------------
-    # Prediction logic
-    # -------------------------------------------------------
     if predict_btn:
         try:
             input_data = pd.DataFrame({
@@ -79,7 +70,6 @@ if model_loaded:
             st.subheader("Prediction Confidence")
             st.metric(label="Confidence", value=f"{confidence:.2f}%")
 
-            # Optional: show top 3 probable classes
             with st.expander("See top predictions breakdown"):
                 proba_df = pd.DataFrame({
                     "Attack Type": target_encoder.classes_,
