@@ -31,7 +31,12 @@ if attack_types:
 
 st.subheader(f"Showing {len(filtered):,} incidents")
 
-st.dataframe(filtered, use_container_width=True, height=400)
+MAX_TABLE_ROWS = 5000
+if len(filtered) > MAX_TABLE_ROWS:
+    st.caption(f"Table preview limited to first {MAX_TABLE_ROWS:,} rows — use the CSV download for the full filtered set.")
+    st.dataframe(filtered.head(MAX_TABLE_ROWS), use_container_width=True, height=400)
+else:
+    st.dataframe(filtered, use_container_width=True, height=400)
 
 st.download_button(
     "⬇️ Download filtered data (CSV)",
@@ -45,7 +50,7 @@ st.divider()
 col1, col2 = st.columns(2)
 
 with col1:
-    yearly = filtered.groupby("iyear").size().reset_index(name="Attacks")
+    yearly = filtered.groupby("iyear", observed=True).size().reset_index(name="Attacks")
     fig1 = px.bar(yearly, x="iyear", y="Attacks", title="Attacks by Year")
     st.plotly_chart(fig1, use_container_width=True)
 

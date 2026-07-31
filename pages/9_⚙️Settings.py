@@ -3,6 +3,7 @@ import pandas as pd
 import json
 import os
 from config import DATA_PATH, ATTACK_MODEL_PATH, FEATURE_ENCODERS_PATH, TARGET_ENCODER_PATH, METRICS_PATH
+from utils.data_loader import load_data
 
 st.set_page_config(page_title="Settings", page_icon="⚙️", layout="wide")
 st.title("⚙️ Settings")
@@ -11,7 +12,7 @@ st.subheader("📁 Dataset Information")
 
 if os.path.exists(DATA_PATH):
     file_size = os.path.getsize(DATA_PATH) / (1024 * 1024)
-    df = pd.read_csv(DATA_PATH, encoding="latin-1", low_memory=False)
+    df = load_data()  # uses the same cache as every other page — no duplicate read
 
     col1, col2, col3 = st.columns(3)
     col1.metric("File Size", f"{file_size:.2f} MB")
@@ -34,8 +35,11 @@ model_files = {
 }
 
 for name, path in model_files.items():
-    status = "✅ Found" if os.path.exists(path) else "❌ Missing"
-    st.write(f"**{name}**: {status} — `{path}`")
+    if os.path.exists(path):
+        size_mb = os.path.getsize(path) / (1024 * 1024)
+        st.write(f"**{name}**: ✅ Found — `{path}` ({size_mb:.2f} MB)")
+    else:
+        st.write(f"**{name}**: ❌ Missing — `{path}`")
 
 st.markdown("---")
 
