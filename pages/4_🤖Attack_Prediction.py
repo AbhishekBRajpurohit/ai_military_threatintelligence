@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import joblib
+import time
 from config import ATTACK_MODEL_PATH, FEATURE_ENCODERS_PATH, TARGET_ENCODER_PATH
 
 st.set_page_config(page_title="Attack Prediction", page_icon="🤖", layout="wide")
@@ -11,20 +12,30 @@ st.write("Enter the incident details below and click **Predict Attack Type**.")
 
 @st.cache_resource
 def load_model_and_encoders():
+    t0 = time.time()
     model = joblib.load(ATTACK_MODEL_PATH)
     encoders = joblib.load(FEATURE_ENCODERS_PATH)
     target_encoder = joblib.load(TARGET_ENCODER_PATH)
+    print(f"[Attack Prediction] Model load took {time.time() - t0:.2f}s")
     return model, encoders, target_encoder
 
 
+model_loaded = False
 try:
-    model, encoders, target_encoder = load_model_and_encoders()
+    with st.spinner("Loading model (first load only — cached after)..."):
+        model, encoders, target_encoder = load_model_and_encoders()
     model_loaded = True
-except FileNotFoundError:
-    model_loaded = False
+except FileNotFoundError as e:
     st.error(
-        "Model files not found. Please run `train_attack_model.py` first "
-        "to generate the model and encoder files inside the /models folder."
+        f"Model file missing: {e}\n\n"
+        "Run `python train_attack_model.py` first to generate the model and encoder files."
+    )
+except Exception as e:
+    st.error(f"Failed to load model ({type(e).__name__}): {e}")
+    st.caption(
+        "This is often a scikit-learn version mismatch between when the model was "
+        "trained and the version currently installed. Try re-running "
+        "`python train_attack_model.py` in your current environment."
     )
 
 if model_loaded:

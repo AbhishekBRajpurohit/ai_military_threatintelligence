@@ -23,7 +23,7 @@ st.divider()
 
 st.subheader("📈 Attacks Over Years")
 
-year_df = country_df.groupby("iyear").size().reset_index(name="Attacks")
+year_df = country_df.groupby("iyear", observed=True).size().reset_index(name="Attacks")
 
 fig = px.line(
     year_df, x="iyear", y="Attacks", markers=True,
