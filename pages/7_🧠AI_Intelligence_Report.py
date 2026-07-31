@@ -56,14 +56,16 @@ with col2:
                   title="Attack Type Distribution", hole=0.4)
     st.plotly_chart(fig2, use_container_width=True)
 
-trend = df.groupby("iyear").size().reset_index(name="Attacks")
+trend = df.groupby("iyear", observed=True).size().reset_index(name="Attacks")
 fig3 = px.line(trend, x="iyear", y="Attacks", title="Attacks Over Time", markers=True)
 st.plotly_chart(fig3, use_container_width=True)
 
 st.markdown("---")
 
 
-def generate_pdf():
+@st.cache_data(show_spinner="Building PDF report...")
+def generate_pdf(total_attacks, total_deaths, total_injured, year_range,
+                  top_country, top_group, top_attack_type):
     buffer = BytesIO()
     c = canvas.Canvas(buffer, pagesize=A4)
     width, height = A4
@@ -90,10 +92,12 @@ def generate_pdf():
 
     c.save()
     buffer.seek(0)
-    return buffer
+    return buffer.getvalue()
 
 
-def generate_docx():
+@st.cache_data(show_spinner="Building Word report...")
+def generate_docx(total_attacks, total_deaths, total_injured, year_range,
+                   top_country, top_group, top_attack_type):
     doc = Document()
     doc.add_heading("AI Military Intelligence Report", level=1)
 
@@ -110,21 +114,26 @@ def generate_docx():
     buffer = BytesIO()
     doc.save(buffer)
     buffer.seek(0)
-    return buffer
+    return buffer.getvalue()
 
 
+# Buttons now only trigger generation lazily via cache — Streamlit still calls
+# these functions to build the download_button's data, but @st.cache_data means
+# the actual PDF/DOCX building only happens once per unique input, not on every rerun.
 col1, col2 = st.columns(2)
 with col1:
     st.download_button(
         "📄 Download PDF Report",
-        data=generate_pdf(),
+        data=generate_pdf(total_attacks, total_deaths, total_injured, year_range,
+                           top_country, top_group, top_attack_type),
         file_name="AI_Intelligence_Report.pdf",
         mime="application/pdf"
     )
 with col2:
     st.download_button(
         "📝 Download Word Report",
-        data=generate_docx(),
+        data=generate_docx(total_attacks, total_deaths, total_injured, year_range,
+                            top_country, top_group, top_attack_type),
         file_name="AI_Intelligence_Report.docx",
         mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     )

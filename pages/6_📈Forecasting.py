@@ -24,13 +24,26 @@ else:
     filtered = df
 
 yearly_counts = (
-    filtered.groupby("iyear")
+    filtered.groupby("iyear", observed=True)
     .size()
     .reset_index(name="attacks")
     .rename(columns={"iyear": "ds", "attacks": "y"})
 )
 
 MIN_POINTS = 8
+
+
+@st.cache_resource(show_spinner="Training forecasting model...")
+def fit_prophet(year_count_pairs, periods):
+    """year_count_pairs must be a hashable tuple for caching to work."""
+    yc = pd.DataFrame(year_count_pairs, columns=["ds", "y"])
+    yc["ds"] = pd.to_datetime(yc["ds"], format="%Y")
+    model = Prophet(yearly_seasonality=False, weekly_seasonality=False, daily_seasonality=False)
+    model.fit(yc)
+    future = model.make_future_dataframe(periods=periods, freq="YE")
+    forecast = model.predict(future)
+    return forecast, yc
+
 
 if len(yearly_counts) < MIN_POINTS:
     st.warning(
@@ -39,19 +52,13 @@ if len(yearly_counts) < MIN_POINTS:
         "try 'All' countries or a broader time range."
     )
 else:
-    yearly_counts["ds"] = pd.to_datetime(yearly_counts["ds"], format="%Y")
-
-    with st.spinner("Training forecasting model..."):
-        model = Prophet(yearly_seasonality=False, weekly_seasonality=False, daily_seasonality=False)
-        model.fit(yearly_counts)
-
-        future = model.make_future_dataframe(periods=periods, freq="YE")
-        forecast = model.predict(future)
+    pairs = tuple(zip(yearly_counts["ds"].tolist(), yearly_counts["y"].tolist()))
+    forecast, yearly_counts_ts = fit_prophet(pairs, periods)
 
     fig = go.Figure()
 
     fig.add_trace(go.Scatter(
-        x=yearly_counts["ds"], y=yearly_counts["y"],
+        x=yearly_counts_ts["ds"], y=yearly_counts_ts["y"],
         mode="markers+lines", name="Historical Attacks", line=dict(color="#3498db")
     ))
 
