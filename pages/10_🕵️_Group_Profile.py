@@ -7,7 +7,7 @@ st.title("🕵️ Terrorist Group Profile")
 
 df = load_data()
 
-groups = sorted(df["gname"].dropna().unique())
+groups = sorted(df["gname"].dropna().unique().tolist())
 groups = [g for g in groups if g != "Unknown"]
 selected_group = st.selectbox("Select Group", groups)
 
@@ -23,7 +23,7 @@ st.divider()
 
 col1, col2 = st.columns(2)
 with col1:
-    trend = gdf.groupby("iyear").size().reset_index(name="Attacks")
+    trend = gdf.groupby("iyear", observed=True).size().reset_index(name="Attacks")
     fig1 = px.line(trend, x="iyear", y="Attacks", markers=True, title="Activity Over Time")
     st.plotly_chart(fig1, use_container_width=True)
 
