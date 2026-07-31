@@ -1,7 +1,7 @@
 import streamlit as st
 import plotly.express as px
 import folium
-from folium.plugins import MarkerCluster
+from folium.plugins import FastMarkerCluster
 from streamlit_folium import st_folium
 from utils.data_loader import load_data
 
@@ -9,9 +9,6 @@ st.title("🌍 Global Threat Map")
 
 df = load_data()
 
-# ==========================
-# Sidebar Filters
-# ==========================
 st.sidebar.header("Filters")
 
 years = ["All"] + sorted(df["iyear"].dropna().unique().tolist())
@@ -23,10 +20,7 @@ selected_region = st.sidebar.selectbox("Region", regions)
 attack_types = ["All"] + sorted(df["attacktype1_txt"].dropna().unique().tolist())
 selected_attack = st.sidebar.selectbox("Attack Type", attack_types)
 
-# ==========================
-# Apply Filters
-# ==========================
-filtered_df = df.copy()
+filtered_df = df
 
 if selected_year != "All":
     filtered_df = filtered_df[filtered_df["iyear"] == selected_year]
@@ -39,27 +33,25 @@ if selected_attack != "All":
 
 filtered_df = filtered_df.dropna(subset=["latitude", "longitude"])
 
-# ==========================
-# Map (clustered if large, scatter_geo otherwise)
-# ==========================
 CLUSTER_THRESHOLD = 3000
+MAX_POINTS_ON_MAP = 25000  # hard cap so the browser never chokes
 
 if len(filtered_df) > CLUSTER_THRESHOLD:
-    st.caption(f"Showing clustered view — {len(filtered_df):,} incidents match your filters.")
+    display_df = filtered_df
+    if len(display_df) > MAX_POINTS_ON_MAP:
+        display_df = display_df.sample(MAX_POINTS_ON_MAP, random_state=42)
+        st.caption(
+            f"{len(filtered_df):,} incidents match your filters — "
+            f"showing a random sample of {MAX_POINTS_ON_MAP:,} for performance."
+        )
+    else:
+        st.caption(f"Showing clustered view — {len(filtered_df):,} incidents match your filters.")
 
     m = folium.Map(location=[20, 0], zoom_start=2, tiles="CartoDB dark_matter")
-    cluster = MarkerCluster().add_to(m)
+    locations = display_df[["latitude", "longitude"]].values.tolist()
+    FastMarkerCluster(data=locations).add_to(m)
 
-    for _, row in filtered_df.iterrows():
-        folium.CircleMarker(
-            location=[row["latitude"], row["longitude"]],
-            radius=3,
-            popup=f"{row['country_txt']} — {row['attacktype1_txt']} ({int(row['nkill'])} killed)",
-            color="crimson",
-            fill=True,
-        ).add_to(cluster)
-
-    st_folium(m, use_container_width=True, height=700)
+    st_folium(m, use_container_width=True, height=700, returned_objects=[])
 else:
     fig = px.scatter_geo(
         filtered_df,
