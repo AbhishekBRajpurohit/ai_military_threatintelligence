@@ -8,6 +8,11 @@ from config import ATTACK_MODEL_PATH, FEATURE_ENCODERS_PATH, TARGET_ENCODER_PATH
 st.set_page_config(page_title="Attack Prediction", page_icon="🤖", layout="wide")
 st.title("🤖 Attack Type Prediction")
 st.write("Enter the incident details below and click **Predict Attack Type**.")
+st.caption(
+    "This model predicts attack type using only information known *before* an "
+    "attack occurs (location, group, weapon/target choice) — casualty counts are "
+    "excluded since those are outcomes, not predictors."
+)
 
 
 @st.cache_resource
@@ -32,11 +37,6 @@ except FileNotFoundError as e:
     )
 except Exception as e:
     st.error(f"Failed to load model ({type(e).__name__}): {e}")
-    st.caption(
-        "This is often a scikit-learn version mismatch between when the model was "
-        "trained and the version currently installed. Try re-running "
-        "`python train_attack_model.py` in your current environment."
-    )
 
 if model_loaded:
     col1, col2 = st.columns(2)
@@ -51,8 +51,6 @@ if model_loaded:
         gname = st.selectbox("👥 Terrorist Group", sorted(encoders["gname"].classes_))
         success = st.selectbox("✅ Attack Successful?", ["Yes", "No"])
         suicide = st.selectbox("💣 Suicide Attack?", ["Yes", "No"])
-        nkill = st.number_input("☠️ Number of Fatalities", min_value=0, value=0, step=1)
-        nwound = st.number_input("🚑 Number of Injured", min_value=0, value=0, step=1)
 
     predict_btn = st.button("🚀 Predict Attack Type")
 
@@ -66,8 +64,6 @@ if model_loaded:
                 "suicide": [1 if suicide == "Yes" else 0],
                 "weaptype1_txt": [encoders["weaptype1_txt"].transform([weapon_type])[0]],
                 "targtype1_txt": [encoders["targtype1_txt"].transform([target_type])[0]],
-                "nkill": [nkill],
-                "nwound": [nwound],
             })
 
             prediction = model.predict(input_data)[0]
