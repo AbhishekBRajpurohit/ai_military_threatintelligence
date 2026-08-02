@@ -1,6 +1,10 @@
 import streamlit as st
 import plotly.express as px
 from utils.data_loader import load_data
+from auth import check_password
+
+if not check_password():
+    st.stop()
 
 st.set_page_config(page_title="Data Explorer", page_icon="📊", layout="wide")
 st.title("📊 Data Explorer")
