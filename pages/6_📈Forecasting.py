@@ -3,6 +3,10 @@ import pandas as pd
 import plotly.graph_objects as go
 from prophet import Prophet
 from utils.data_loader import load_data
+from auth import check_password
+
+if not check_password():
+    st.stop()
 
 st.set_page_config(page_title="Forecasting", page_icon="📈", layout="wide")
 st.title("📈 Attack Trend Forecasting")
@@ -35,7 +39,6 @@ MIN_POINTS = 8
 
 @st.cache_resource(show_spinner="Training forecasting model...")
 def fit_prophet(year_count_pairs, periods):
-    """year_count_pairs must be a hashable tuple for caching to work."""
     yc = pd.DataFrame(year_count_pairs, columns=["ds", "y"])
     yc["ds"] = pd.to_datetime(yc["ds"], format="%Y")
     model = Prophet(yearly_seasonality=False, weekly_seasonality=False, daily_seasonality=False)
