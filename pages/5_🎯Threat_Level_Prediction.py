@@ -3,6 +3,10 @@ import pandas as pd
 import plotly.graph_objects as go
 import joblib
 from config import SEVERITY_MODEL_PATH, SEVERITY_ENCODERS_PATH
+from auth import check_password
+
+if not check_password():
+    st.stop()
 
 st.set_page_config(page_title="Threat Level Prediction", page_icon="🎯", layout="wide")
 st.title("🎯 Threat Level Prediction")
