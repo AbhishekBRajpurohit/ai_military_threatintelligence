@@ -1,6 +1,10 @@
 import streamlit as st
 import plotly.express as px
 from utils.data_loader import load_data
+from auth import check_password
+
+if not check_password():
+    st.stop()
 
 st.title("🏠 Home")
 
@@ -18,7 +22,7 @@ st.divider()
 
 st.subheader("Attacks Over Years")
 
-yearly = df.groupby("iyear").size().reset_index(name="Attacks")
+yearly = df.groupby("iyear", observed=True).size().reset_index(name="Attacks")
 
 fig = px.line(yearly, x="iyear", y="Attacks", markers=True, title="")
 fig.update_layout(xaxis_title="Year", yaxis_title="Attacks", height=500)
