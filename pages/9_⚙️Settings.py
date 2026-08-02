@@ -4,6 +4,10 @@ import json
 import os
 from config import DATA_PATH, ATTACK_MODEL_PATH, FEATURE_ENCODERS_PATH, TARGET_ENCODER_PATH, METRICS_PATH
 from utils.data_loader import load_data
+from auth import check_password
+
+if not check_password():
+    st.stop()
 
 st.set_page_config(page_title="Settings", page_icon="⚙️", layout="wide")
 st.title("⚙️ Settings")
@@ -12,7 +16,7 @@ st.subheader("📁 Dataset Information")
 
 if os.path.exists(DATA_PATH):
     file_size = os.path.getsize(DATA_PATH) / (1024 * 1024)
-    df = load_data()  # uses the same cache as every other page — no duplicate read
+    df = load_data()
 
     col1, col2, col3 = st.columns(3)
     col1.metric("File Size", f"{file_size:.2f} MB")
@@ -53,6 +57,9 @@ if os.path.exists(METRICS_PATH):
     c1.metric("Accuracy", f"{metrics['accuracy']*100:.2f}%")
     c2.metric("Train samples", f"{metrics['n_train']:,}")
     c3.metric("Test samples", f"{metrics['n_test']:,}")
+
+    if metrics.get("split_type") == "temporal":
+        st.caption(f"Evaluated with a temporal split — trained on years before {metrics.get('split_year')}, tested on years from {metrics.get('split_year')} onward.")
 
     with st.expander("Per-class precision / recall / F1"):
         report_df = pd.DataFrame(metrics["report"]).transpose()
