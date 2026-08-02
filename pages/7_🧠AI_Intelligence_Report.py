@@ -7,6 +7,10 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.units import cm
 from docx import Document
 from utils.data_loader import load_data
+from auth import check_password
+
+if not check_password():
+    st.stop()
 
 st.set_page_config(page_title="AI Intelligence Report", page_icon="🧠", layout="wide")
 st.title("🧠 AI Intelligence Report")
@@ -117,9 +121,6 @@ def generate_docx(total_attacks, total_deaths, total_injured, year_range,
     return buffer.getvalue()
 
 
-# Buttons now only trigger generation lazily via cache — Streamlit still calls
-# these functions to build the download_button's data, but @st.cache_data means
-# the actual PDF/DOCX building only happens once per unique input, not on every rerun.
 col1, col2 = st.columns(2)
 with col1:
     st.download_button(
