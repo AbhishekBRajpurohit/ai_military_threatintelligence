@@ -4,6 +4,10 @@ import numpy as np
 import joblib
 import time
 from config import ATTACK_MODEL_PATH, FEATURE_ENCODERS_PATH, TARGET_ENCODER_PATH
+from auth import check_password
+
+if not check_password():
+    st.stop()
 
 st.set_page_config(page_title="Attack Prediction", page_icon="🤖", layout="wide")
 st.title("🤖 Attack Type Prediction")
