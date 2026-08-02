@@ -4,6 +4,10 @@ import folium
 from folium.plugins import FastMarkerCluster
 from streamlit_folium import st_folium
 from utils.data_loader import load_data
+from auth import check_password
+
+if not check_password():
+    st.stop()
 
 st.title("🌍 Global Threat Map")
 
@@ -34,7 +38,7 @@ if selected_attack != "All":
 filtered_df = filtered_df.dropna(subset=["latitude", "longitude"])
 
 CLUSTER_THRESHOLD = 3000
-MAX_POINTS_ON_MAP = 25000  # hard cap so the browser never chokes
+MAX_POINTS_ON_MAP = 25000
 
 if len(filtered_df) > CLUSTER_THRESHOLD:
     display_df = filtered_df
