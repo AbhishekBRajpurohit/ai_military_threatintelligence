@@ -56,4 +56,20 @@ def check_password():
     Includes a simple attempt counter with a temporary lockout after
     repeated failed tries.
     """
-    
+    if st.session_state.get("authenticated"):
+        return True
+
+    st.session_state.setdefault("login_attempts", 0)
+    st.session_state.setdefault("lockout_until", 0)
+
+    _inject_login_css()
+
+    now = time.time()
+    locked_out = now < st.session_state["lockout_until"]
+
+    left, center, right = st.columns([1, 1.4, 1])
+    with center:
+        st.markdown('<div class="login-wrapper">', unsafe_allow_html=True)
+        st.markdown('<div class="login-icon">🛡️</div>', unsafe_allow_html=True)
+        st.markdown('<div class="login-title">GTD Analytics Dashboard</div>', unsafe_allow_html=True)
+        st.markdown('<div class="login-subtitle">Enter your password to continue</div>', unsafe_allow_html=True)
