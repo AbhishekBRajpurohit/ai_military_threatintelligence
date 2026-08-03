@@ -102,4 +102,4 @@ if locked_out:
                         st.error(f"❌ Incorrect password. {remaining_trst.markdown(
             '<div class="login-footer">GTD Analytics · Research & Educational Use Only</div>',
             unsafe_allow_html=True
-        )
+        )st.markdown('</div>', unsafe_allow_html=True)
