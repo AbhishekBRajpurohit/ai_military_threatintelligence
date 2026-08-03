@@ -73,3 +73,30 @@ def check_password():
         st.markdown('<div class="login-icon">🛡️</div>', unsafe_allow_html=True)
         st.markdown('<div class="login-title">GTD Analytics Dashboard</div>', unsafe_allow_html=True)
         st.markdown('<div class="login-subtitle">Enter your password to continue</div>', unsafe_allow_html=True)
+if locked_out:
+            remaining = int(st.session_state["lockout_until"] - now)
+            st.error(f"🔒 Too many failed attempts. Try again in {remaining}s.")
+        else:
+            with st.form("login_form", clear_on_submit=False):
+                password = st.text_input("Password", type="password", label_visibility="collapsed",
+                                          placeholder="Password")
+                submitted = st.form_submit_button("🔓 Log In")
+
+            if submitted:
+                correct = st.secrets.get("APP_PASSWORD")
+                if correct is None:
+                    st.error("No APP_PASSWORD configured in .streamlit/secrets.toml")
+                elif password == correct:
+                    st.session_state["authenticated"] = True
+                    st.session_state["login_attempts"] = 0
+                    st.rerun()
+                else:
+                    st.session_state["login_attempts"] += 1
+                    remaining_tries = MAX_ATTEMPTS - st.session_state["login_attempts"]
+
+                    if remaining_tries <= 0:
+                        st.session_state["lockout_until"] = now + LOCKOUT_SECONDS
+                        st.session_state["login_attempts"] = 0
+                        st.error(f"🔒 Too many failed attempts. Locked for {LOCKOUT_SECONDS}s.")
+                    else:
+                        st.error(f"❌ Incorrect password. {remaining_tr
