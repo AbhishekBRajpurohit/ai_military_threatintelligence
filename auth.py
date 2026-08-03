@@ -3,3 +3,49 @@ import time
 
 MAX_ATTEMPTS = 5
 LOCKOUT_SECONDS = 60
+
+def _inject_login_css():
+    st.markdown("""
+        <style>
+        .login-wrapper {
+            max-width: 420px;
+            margin: 8vh auto 0 auto;
+            padding: 2.5rem 2.5rem 2rem 2.5rem;
+            background: linear-gradient(180deg, rgba(30,32,40,0.9) 0%, rgba(20,22,28,0.9) 100%);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            text-align: center;
+        }
+        .login-icon {
+            font-size: 42px;
+            margin-bottom: 0.5rem;
+        }
+        .login-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+            color: #f0f0f0;
+        }
+        .login-subtitle {
+            font-size: 0.9rem;
+            color: #9a9a9a;
+            margin-bottom: 1.75rem;
+        }
+        .login-footer {
+            margin-top: 1.5rem;
+            font-size: 0.75rem;
+            color: #666;
+        }
+        div[data-testid="stTextInput"] input {
+            border-radius: 8px !important;
+        }
+        div.stButton > button {
+            width: 100%;
+            border-radius: 8px;
+            font-weight: 600;
+            padding: 0.5rem 0;
+            margin-top: 0.5rem;
+        }
+        </style>
+    """, unsafe_allow_html=True)
