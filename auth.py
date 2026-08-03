@@ -103,3 +103,5 @@ if locked_out:
             '<div class="login-footer">GTD Analytics · Research & Educational Use Only</div>',
             unsafe_allow_html=True
         )st.markdown('</div>', unsafe_allow_html=True)
+
+    return False
