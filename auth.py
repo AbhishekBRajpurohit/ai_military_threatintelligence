@@ -49,3 +49,11 @@ def _inject_login_css():
         }
         </style>
     """, unsafe_allow_html=True)
+def check_password():
+    """
+    Returns True if the user is authenticated.
+    Set APP_PASSWORD in .streamlit/secrets.toml — never hardcode it here.
+    Includes a simple attempt counter with a temporary lockout after
+    repeated failed tries.
+    """
+    
