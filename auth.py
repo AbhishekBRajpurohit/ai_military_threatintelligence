@@ -99,4 +99,7 @@ if locked_out:
                         st.session_state["login_attempts"] = 0
                         st.error(f"🔒 Too many failed attempts. Locked for {LOCKOUT_SECONDS}s.")
                     else:
-                        st.error(f"❌ Incorrect password. {remaining_tr
+                        st.error(f"❌ Incorrect password. {remaining_trst.markdown(
+            '<div class="login-footer">GTD Analytics · Research & Educational Use Only</div>',
+            unsafe_allow_html=True
+        )
