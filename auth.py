@@ -4,6 +4,7 @@ import time
 MAX_ATTEMPTS = 5
 LOCKOUT_SECONDS = 60
 
+
 def _inject_login_css():
     st.markdown("""
         <style>
@@ -49,6 +50,8 @@ def _inject_login_css():
         }
         </style>
     """, unsafe_allow_html=True)
+
+
 def check_password():
     """
     Returns True if the user is authenticated.
@@ -56,6 +59,7 @@ def check_password():
     Includes a simple attempt counter with a temporary lockout after
     repeated failed tries.
     """
+
     if st.session_state.get("authenticated"):
         return True
 
@@ -73,7 +77,8 @@ def check_password():
         st.markdown('<div class="login-icon">🛡️</div>', unsafe_allow_html=True)
         st.markdown('<div class="login-title">GTD Analytics Dashboard</div>', unsafe_allow_html=True)
         st.markdown('<div class="login-subtitle">Enter your password to continue</div>', unsafe_allow_html=True)
-if locked_out:
+
+        if locked_out:
             remaining = int(st.session_state["lockout_until"] - now)
             st.error(f"🔒 Too many failed attempts. Try again in {remaining}s.")
         else:
@@ -99,9 +104,12 @@ if locked_out:
                         st.session_state["login_attempts"] = 0
                         st.error(f"🔒 Too many failed attempts. Locked for {LOCKOUT_SECONDS}s.")
                     else:
-                        st.error(f"❌ Incorrect password. {remaining_trst.markdown(
+                        st.error(f"❌ Incorrect password. {remaining_tries} attempt(s) remaining.")
+
+        st.markdown(
             '<div class="login-footer">GTD Analytics · Research & Educational Use Only</div>',
             unsafe_allow_html=True
-        )st.markdown('</div>', unsafe_allow_html=True)
+        )
+        st.markdown('</div>', unsafe_allow_html=True)
 
     return False
