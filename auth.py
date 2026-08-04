@@ -3,6 +3,7 @@ import time
 
 MAX_ATTEMPTS = 5
 LOCKOUT_SECONDS = 60
+SESSION_TIMEOUT_SECONDS = 30 * 60  # auto-logout after 30 minutes idle
 
 
 def _inject_login_css():
@@ -18,50 +19,36 @@ def _inject_login_css():
             box-shadow: 0 8px 32px rgba(0,0,0,0.4);
             text-align: center;
         }
-        .login-icon {
-            font-size: 42px;
-            margin-bottom: 0.5rem;
-        }
-        .login-title {
-            font-size: 1.6rem;
-            font-weight: 700;
-            margin-bottom: 0.25rem;
-            color: #f0f0f0;
-        }
-        .login-subtitle {
-            font-size: 0.9rem;
-            color: #9a9a9a;
-            margin-bottom: 1.75rem;
-        }
-        .login-footer {
-            margin-top: 1.5rem;
-            font-size: 0.75rem;
-            color: #666;
-        }
-        div[data-testid="stTextInput"] input {
-            border-radius: 8px !important;
-        }
-        div.stButton > button {
-            width: 100%;
-            border-radius: 8px;
-            font-weight: 600;
-            padding: 0.5rem 0;
-            margin-top: 0.5rem;
-        }
+        .login-icon { font-size: 42px; margin-bottom: 0.5rem; }
+        .login-title { font-size: 1.6rem; font-weight: 700; margin-bottom: 0.25rem; color: #f0f0f0; }
+        .login-subtitle { font-size: 0.9rem; color: #9a9a9a; margin-bottom: 1.75rem; }
+        .login-footer { margin-top: 1.5rem; font-size: 0.75rem; color: #666; }
+        div[data-testid="stTextInput"] input { border-radius: 8px !important; }
+        div.stButton > button { width: 100%; border-radius: 8px; font-weight: 600; padding: 0.5rem 0; margin-top: 0.5rem; }
         </style>
     """, unsafe_allow_html=True)
 
 
+def _session_expired():
+    last_active = st.session_state.get("last_active")
+    if last_active is None:
+        return False
+    return (time.time() - last_active) > SESSION_TIMEOUT_SECONDS
+
+
 def check_password():
     """
-    Returns True if the user is authenticated.
-    Set APP_PASSWORD in .streamlit/secrets.toml — never hardcode it here.
-    Includes a simple attempt counter with a temporary lockout after
-    repeated failed tries.
+    Returns True if the user is authenticated and the session hasn't timed out.
+    Set APP_PASSWORD in .streamlit/secrets.toml.
     """
 
     if st.session_state.get("authenticated"):
-        return True
+        if _session_expired():
+            st.session_state["authenticated"] = False
+            st.warning("⏱️ Session expired due to inactivity. Please log in again.")
+        else:
+            st.session_state["last_active"] = time.time()
+            return True
 
     st.session_state.setdefault("login_attempts", 0)
     st.session_state.setdefault("lockout_until", 0)
@@ -94,6 +81,7 @@ def check_password():
                 elif password == correct:
                     st.session_state["authenticated"] = True
                     st.session_state["login_attempts"] = 0
+                    st.session_state["last_active"] = time.time()
                     st.rerun()
                 else:
                     st.session_state["login_attempts"] += 1
@@ -106,10 +94,19 @@ def check_password():
                     else:
                         st.error(f"❌ Incorrect password. {remaining_tries} attempt(s) remaining.")
 
-        st.markdown(
-            '<div class="login-footer">GTD Analytics · Research & Educational Use Only</div>',
-            unsafe_allow_html=True
-        )
+        st.markdown('<div class="login-footer">GTD Analytics · Research & Educational Use Only</div>',
+                    unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
     return False
+
+
+def logout_button():
+    """Call this in the sidebar on any authenticated page to add a logout control."""
+    with st.sidebar:
+        st.divider()
+        st.caption(f"🟢 Logged in")
+        if st.button("🚪 Log Out", use_container_width=True):
+            st.session_state["authenticated"] = False
+            st.session_state.pop("last_active", None)
+            st.rerun()
