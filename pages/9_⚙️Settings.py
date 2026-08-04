@@ -4,10 +4,9 @@ import json
 import os
 from config import DATA_PATH, ATTACK_MODEL_PATH, FEATURE_ENCODERS_PATH, TARGET_ENCODER_PATH, METRICS_PATH
 from utils.data_loader import load_data
-from auth import check_password
+from utils.auth_ui import require_login
 
-if not check_password():
-    st.stop()
+require_login()
 
 st.set_page_config(page_title="Settings", page_icon="⚙️", layout="wide")
 st.title("⚙️ Settings")
