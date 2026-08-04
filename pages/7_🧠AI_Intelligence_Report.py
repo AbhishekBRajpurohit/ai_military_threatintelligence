@@ -7,10 +7,9 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.units import cm
 from docx import Document
 from utils.data_loader import load_data
-from auth import check_password
+from utils.auth_ui import require_login
 
-if not check_password():
-    st.stop()
+require_login()
 
 st.set_page_config(page_title="AI Intelligence Report", page_icon="🧠", layout="wide")
 st.title("🧠 AI Intelligence Report")
