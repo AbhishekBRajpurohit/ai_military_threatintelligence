@@ -1,5 +1,5 @@
 import streamlit as st
-from auth import check_password
+from utils.auth_ui import require_login
 
 st.set_page_config(
     page_title="GTD Analytics Dashboard",
@@ -7,8 +7,7 @@ st.set_page_config(
     layout="wide"
 )
 
-if not check_password():
-    st.stop()
+require_login()
 
 st.title("🛡️ GTD Analytics & Forecasting Dashboard")
 
