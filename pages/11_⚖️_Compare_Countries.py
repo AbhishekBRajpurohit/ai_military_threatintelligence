@@ -2,10 +2,9 @@ import streamlit as st
 import plotly.graph_objects as go
 import plotly.express as px
 from utils.data_loader import load_data
-from auth import check_password
+from utils.auth_ui import require_login
 
-if not check_password():
-    st.stop()
+require_login()
 
 st.set_page_config(page_title="Compare Countries", page_icon="⚖️", layout="wide")
 st.title("⚖️ Compare Countries")
