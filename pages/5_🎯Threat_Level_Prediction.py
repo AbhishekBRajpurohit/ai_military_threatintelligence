@@ -107,7 +107,7 @@ if predict_btn:
     )
 
     st.divider()
-    st.subheader("🤖 ML-Based Casualty Estimate")
+    st.subheader("🤖 ai/ML-Based Casualty Estimate")
 
     try:
         sev_model, sev_encoders = load_severity_model()
@@ -125,7 +125,7 @@ if predict_btn:
         })
 
         ml_estimate = sev_model.predict(input_row)[0]
-        st.metric("ML-Estimated Casualties (nkill + nwound)", f"{ml_estimate:.1f}")
+        st.metric("ML - Estimated Casualties (nkill + nwound)", f"{ml_estimate:.1f}")
         st.caption(
             "Predicted from historical patterns using a RandomForest regressor. "
             "Country/region are not set from this form, so treat this as a rough baseline."
