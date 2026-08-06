@@ -92,7 +92,7 @@ def check_password():
                         st.session_state["login_attempts"] = 0
                         st.error(f"🔒 Too many failed attempts. Locked for {LOCKOUT_SECONDS}s.")
                     else:
-                        st.error(f"❌ Incorrect password. {remaining_tries} attempt(s) remaining.")
+                        st.error(f"❌ Incorrect password entered. {remaining_tries} attempt(s) remaining.")
 
         st.markdown('<div class="login-footer">GTD Analytics · Research & Educational Use Only</div>',
                     unsafe_allow_html=True)
