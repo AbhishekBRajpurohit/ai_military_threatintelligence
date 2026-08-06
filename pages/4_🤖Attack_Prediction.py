@@ -39,7 +39,7 @@ except FileNotFoundError as e:
         "Run `python train_attack_model.py` first to generate the model and encoder files."
     )
 except Exception as e:
-    st.error(f"Failed to load model ({type(e).__name__}): {e}")
+    st.error(f"Failed to load data model ({type(e).__name__}): {e}")
 
 if model_loaded:
     col1, col2 = st.columns(2)
