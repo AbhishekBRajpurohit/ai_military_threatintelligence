@@ -45,7 +45,7 @@ def check_password():
     if st.session_state.get("authenticated"):
         if _session_expired():
             st.session_state["authenticated"] = False
-            st.warning("⏱️ Session expired due to inactivity. Please log in again.")
+            st.warning("⏱️ Session time out. Please log in again.")
         else:
             st.session_state["last_active"] = time.time()
             return True
