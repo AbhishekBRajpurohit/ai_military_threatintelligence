@@ -24,7 +24,7 @@ c4.metric("Cities", country_df["city"].nunique())
 
 st.divider()
 
-st.subheader("📈 Attacks Over Years")
+st.subheader("📈 Attacks Over Years estimated ")
 
 year_df = country_df.groupby("iyear", observed=True).size().reset_index(name="Attacks")
 

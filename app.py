@@ -2,7 +2,7 @@ import streamlit as st
 from utils.auth_ui import require_login
 
 st.set_page_config(
-    page_title="GTD Analytics Dashboard",
+    page_title="GTD Analytical Dashboard",
     page_icon="🛡️",
     layout="wide"
 )
@@ -12,7 +12,7 @@ require_login()
 st.title("🛡️ GTD Analytics & Forecasting Dashboard")
 
 st.markdown("""
-### Welcome
+### Welcome to app
 
 This dashboard provides analytics on the Global Terrorism Database (GTD) —
 a public historical research dataset. It is intended for educational and
