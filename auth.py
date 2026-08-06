@@ -90,7 +90,7 @@ def check_password():
                     if remaining_tries <= 0:
                         st.session_state["lockout_until"] = now + LOCKOUT_SECONDS
                         st.session_state["login_attempts"] = 0
-                        st.error(f"🔒 Too many failed attempts. Locked for {LOCKOUT_SECONDS}s.")
+                        st.error(f"🔒 Too many failed attempts by the user. Locked for {LOCKOUT_SECONDS}s.")
                     else:
                         st.error(f"❌ Incorrect password entered. {remaining_tries} attempt(s) remaining.")
 
