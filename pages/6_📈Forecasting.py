@@ -9,7 +9,7 @@ require_login()
 
 st.set_page_config(page_title="Forecasting", page_icon="📈", layout="wide")
 st.title("📈 Attack Trend Forecasting")
-st.write("Forecast future incident trends using historical data (Prophet time-series model).")
+st.write("Forecast future incident trends using historical database (Prophet time-series model).")
 
 df = load_data()
 

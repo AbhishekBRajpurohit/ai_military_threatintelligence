@@ -123,7 +123,7 @@ def generate_docx(total_attacks, total_deaths, total_injured, year_range,
 col1, col2 = st.columns(2)
 with col1:
     st.download_button(
-        "📄 Download PDF Report",
+        "📄 Download PDF Report directly",
         data=generate_pdf(total_attacks, total_deaths, total_injured, year_range,
                            top_country, top_group, top_attack_type),
         file_name="AI_Intelligence_Report.pdf",
@@ -131,7 +131,7 @@ with col1:
     )
 with col2:
     st.download_button(
-        "📝 Download Word Report",
+        "📝 Download Word Report directly ",
         data=generate_docx(total_attacks, total_deaths, total_injured, year_range,
                             top_country, top_group, top_attack_type),
         file_name="AI_Intelligence_Report.docx",
